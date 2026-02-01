@@ -67,7 +67,7 @@ export default function BlogCard({
                   {tags.slice(0, 2).map((tag) => (
                     <span
                       key={tag}
-                      className="text-xs font-medium text-[#1a8917] uppercase tracking-wide"
+                      className="text-xs font-medium text-[#2563EB] uppercase tracking-wide"
                     >
                       {tag}
                     </span>
@@ -75,7 +75,7 @@ export default function BlogCard({
                 </div>
               )}
 
-              <h2 className="text-2xl md:text-3xl font-bold text-[#242424] mb-3 font-serif group-hover:text-[#1a8917] transition-colors line-clamp-2">
+              <h2 className="text-2xl md:text-3xl font-bold text-[#242424] mb-3 font-serif group-hover:text-[#2563EB] transition-colors line-clamp-2">
                 {title}
               </h2>
 
@@ -97,7 +97,7 @@ export default function BlogCard({
                       className="object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-[#1a8917] text-white text-sm font-medium">
+                    <div className="w-full h-full flex items-center justify-center bg-[#2563EB] text-white text-sm font-medium">
                       {author.name.charAt(0)}
                     </div>
                   )}
@@ -141,7 +141,7 @@ export default function BlogCard({
                     className="object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-[#1a8917] text-white text-xs font-medium">
+                  <div className="w-full h-full flex items-center justify-center bg-[#2563EB] text-white text-xs font-medium">
                     {author.name.charAt(0)}
                   </div>
                 )}
@@ -152,7 +152,7 @@ export default function BlogCard({
             </div>
 
             {/* Title */}
-            <h2 className="text-xl font-bold text-[#242424] mb-2 font-serif group-hover:text-[#1a8917] transition-colors line-clamp-2">
+            <h2 className="text-xl font-bold text-[#242424] mb-2 font-serif group-hover:text-[#2563EB] transition-colors line-clamp-2">
               {title}
             </h2>
 

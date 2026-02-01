@@ -183,7 +183,7 @@ export default function BlogPostPage({
                     className="object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-[#1a8917] text-white text-lg font-medium">
+                  <div className="w-full h-full flex items-center justify-center bg-[#2563EB] text-white text-lg font-medium">
                     {post.author.name.charAt(0)}
                   </div>
                 )}
@@ -230,9 +230,9 @@ export default function BlogPostPage({
                 prose-headings:font-serif prose-headings:font-bold prose-headings:text-[#242424]
                 prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl
                 prose-p:text-[#242424] prose-p:leading-[1.75] prose-p:text-lg
-                prose-a:text-[#1a8917] prose-a:no-underline hover:prose-a:underline
+                prose-a:text-[#2563EB] prose-a:no-underline hover:prose-a:underline
                 prose-strong:text-[#242424]
-                prose-blockquote:border-l-[#1a8917] prose-blockquote:text-[#6b6b6b] prose-blockquote:not-italic prose-blockquote:font-normal
+                prose-blockquote:border-l-[#2563EB] prose-blockquote:text-[#6b6b6b] prose-blockquote:not-italic prose-blockquote:font-normal
                 prose-code:bg-gray-100 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-[#242424] prose-code:before:content-none prose-code:after:content-none
                 prose-pre:bg-gray-900 prose-pre:text-gray-100
                 prose-img:rounded-lg prose-img:mx-auto
@@ -283,7 +283,7 @@ export default function BlogPostPage({
                       className="object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-[#1a8917] text-white text-xl font-medium">
+                    <div className="w-full h-full flex items-center justify-center bg-[#2563EB] text-white text-xl font-medium">
                       {post.author.name.charAt(0)}
                     </div>
                   )}
@@ -330,7 +330,7 @@ export default function BlogPostPage({
           >
             <Link
               href="/blog"
-              className="inline-flex items-center gap-2 text-[#1a8917] font-medium hover:underline"
+              className="inline-flex items-center gap-2 text-[#2563EB] font-medium hover:underline"
             >
               Read more stories
               <svg

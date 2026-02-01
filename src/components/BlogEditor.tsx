@@ -44,7 +44,7 @@ export default function BlogEditor({
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
-          class: "text-[#1a8917] hover:underline cursor-pointer",
+          class: "text-[#2563EB] hover:underline cursor-pointer",
         },
       }),
       Placeholder.configure({
@@ -63,7 +63,7 @@ export default function BlogEditor({
         },
       }),
       Dropcursor.configure({
-        color: "#1a8917",
+        color: "#2563EB",
         width: 2,
       }),
       Gapcursor,
@@ -436,7 +436,7 @@ export default function BlogEditor({
               value={videoUrl}
               onChange={(e) => setVideoUrl(e.target.value)}
               placeholder="Paste YouTube URL..."
-              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a8917] mb-4"
+              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563EB] mb-4"
               autoFocus
             />
             <div className="flex gap-3 justify-end">
@@ -449,7 +449,7 @@ export default function BlogEditor({
               <button
                 onClick={insertVideo}
                 disabled={!videoUrl}
-                className="px-4 py-2 bg-[#1a8917] text-white rounded-lg hover:bg-[#157313] transition-colors disabled:opacity-50 cursor-pointer"
+                className="px-4 py-2 bg-[#2563EB] text-white rounded-lg hover:bg-[#1D4ED8] transition-colors disabled:opacity-50 cursor-pointer"
               >
                 Embed
               </button>
@@ -468,7 +468,7 @@ export default function BlogEditor({
               value={imageUrl}
               onChange={(e) => setImageUrl(e.target.value)}
               placeholder="Paste image URL or GIF URL..."
-              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a8917] mb-4"
+              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563EB] mb-4"
               autoFocus
             />
             <div className="flex gap-3 justify-end">
@@ -481,7 +481,7 @@ export default function BlogEditor({
               <button
                 onClick={insertImage}
                 disabled={!imageUrl}
-                className="px-4 py-2 bg-[#1a8917] text-white rounded-lg hover:bg-[#157313] transition-colors disabled:opacity-50 cursor-pointer"
+                className="px-4 py-2 bg-[#2563EB] text-white rounded-lg hover:bg-[#1D4ED8] transition-colors disabled:opacity-50 cursor-pointer"
               >
                 Insert
               </button>
@@ -542,7 +542,7 @@ function ToolbarButton({
       title={title}
       className={`p-2 rounded-lg transition-colors cursor-pointer min-w-[36px] min-h-[36px] flex items-center justify-center ${
         isActive
-          ? "bg-[#1a8917]/10 text-[#1a8917]"
+          ? "bg-[#2563EB]/10 text-[#2563EB]"
           : "text-gray-500 hover:bg-gray-100 hover:text-gray-900"
       } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
     >

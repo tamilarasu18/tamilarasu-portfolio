@@ -161,7 +161,7 @@ export default function CreateBlogPage() {
             <button
               onClick={() => setShowPublishPanel(true)}
               disabled={!title || !content}
-              className="px-4 py-2 bg-[#1a8917] text-white rounded-full text-sm font-medium hover:bg-[#157313] transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="px-4 py-2 bg-[#2563EB] text-white rounded-full text-sm font-medium hover:bg-[#1D4ED8] transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               Publish
             </button>
@@ -209,7 +209,7 @@ export default function CreateBlogPage() {
               <button
                 onClick={() => coverInputRef.current?.click()}
                 disabled={uploading}
-                className="w-full aspect-[3/1] border-2 border-dashed border-gray-200 rounded-lg flex flex-col items-center justify-center text-[#6b6b6b] hover:border-[#1a8917] hover:text-[#1a8917] transition-colors cursor-pointer"
+                className="w-full aspect-[3/1] border-2 border-dashed border-gray-200 rounded-lg flex flex-col items-center justify-center text-[#6b6b6b] hover:border-[#2563EB] hover:text-[#2563EB] transition-colors cursor-pointer"
               >
                 {uploading ? (
                   <>
@@ -351,7 +351,7 @@ export default function CreateBlogPage() {
                     onKeyDown={handleAddTag}
                     placeholder="Add up to 5 tags..."
                     disabled={tags.length >= 5}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a8917] text-sm"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563EB] text-sm"
                   />
                 </div>
 
@@ -366,7 +366,7 @@ export default function CreateBlogPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     placeholder="Enter password to publish"
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a8917] text-sm"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2563EB] text-sm"
                   />
                 </div>
 
@@ -400,7 +400,7 @@ export default function CreateBlogPage() {
                 <button
                   type="submit"
                   disabled={loading || !password}
-                  className="px-6 py-2 bg-[#1a8917] text-white rounded-full font-medium hover:bg-[#157313] transition-colors disabled:opacity-50 cursor-pointer flex items-center gap-2"
+                  className="px-6 py-2 bg-[#2563EB] text-white rounded-full font-medium hover:bg-[#1D4ED8] transition-colors disabled:opacity-50 cursor-pointer flex items-center gap-2"
                 >
                   {loading ? (
                     <>

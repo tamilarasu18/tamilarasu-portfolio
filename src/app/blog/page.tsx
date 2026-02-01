@@ -156,7 +156,7 @@ export default function BlogPage() {
             </p>
             <Link
               href="/"
-              className="inline-flex items-center gap-2 text-[#1a8917] font-medium hover:underline"
+              className="inline-flex items-center gap-2 text-[#2563EB] font-medium hover:underline"
             >
               Back to Portfolio
               <svg
@@ -228,7 +228,7 @@ export default function BlogPage() {
         >
           <Link
             href="/blog/create"
-            className="w-14 h-14 bg-[#1a8917] text-white rounded-full flex items-center justify-center shadow-lg hover:bg-[#157313] transition-colors cursor-pointer"
+            className="w-14 h-14 bg-[#2563EB] text-white rounded-full flex items-center justify-center shadow-lg hover:bg-[#1D4ED8] transition-colors cursor-pointer"
             title="Write a story"
           >
             <svg
