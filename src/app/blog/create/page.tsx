@@ -25,9 +25,17 @@ export default function CreateBlogPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!password) {
-      setError("Please enter the admin password first to upload images");
-      return;
+    let uploadPassword = password;
+    if (!uploadPassword) {
+      const promptedPassword = window.prompt(
+        "Enter admin password to upload images:",
+      );
+      if (!promptedPassword) {
+        setError("Password is required to upload images");
+        return;
+      }
+      uploadPassword = promptedPassword;
+      setPassword(promptedPassword);
     }
 
     setUploading(true);
@@ -36,7 +44,7 @@ export default function CreateBlogPage() {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("password", password);
+      formData.append("password", uploadPassword);
 
       const response = await fetch("/api/blog/upload", {
         method: "POST",
@@ -58,13 +66,21 @@ export default function CreateBlogPage() {
   };
 
   const handleImageUpload = async (file: File): Promise<string> => {
-    if (!password) {
-      throw new Error("Please enter the admin password first");
+    let uploadPassword = password;
+    if (!uploadPassword) {
+      const promptedPassword = window.prompt(
+        "Enter admin password to upload images:",
+      );
+      if (!promptedPassword) {
+        throw new Error("Password is required to upload images");
+      }
+      uploadPassword = promptedPassword;
+      setPassword(promptedPassword);
     }
 
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("password", password);
+    formData.append("password", uploadPassword);
 
     const response = await fetch("/api/blog/upload", {
       method: "POST",
