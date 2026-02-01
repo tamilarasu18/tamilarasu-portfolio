@@ -34,6 +34,15 @@ export default function BlogEditor({
         heading: {
           levels: [1, 2, 3],
         },
+        // Disable markdown auto-detection for lists to prevent double markers
+        bulletList: {
+          keepMarks: true,
+          keepAttributes: false,
+        },
+        orderedList: {
+          keepMarks: true,
+          keepAttributes: false,
+        },
       }),
       Image.configure({
         allowBase64: true,
@@ -534,9 +543,16 @@ function ToolbarButton({
   disabled?: boolean;
   children: React.ReactNode;
 }) {
+  const handleMouseDown = (e: React.MouseEvent) => {
+    // Prevent the button from stealing focus from the editor
+    e.preventDefault();
+  };
+
   return (
     <button
       type="button"
+      tabIndex={-1}
+      onMouseDown={handleMouseDown}
       onClick={onClick}
       disabled={disabled}
       title={title}
