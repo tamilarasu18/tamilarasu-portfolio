@@ -5,13 +5,29 @@ import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
+import Youtube from "@tiptap/extension-youtube";
+import Dropcursor from "@tiptap/extension-dropcursor";
+import Gapcursor from "@tiptap/extension-gapcursor";
+import { useState, useCallback, useRef } from "react";
 
 interface BlogEditorProps {
   content: string;
   onChange: (content: string) => void;
+  onImageUpload?: (file: File) => Promise<string>;
 }
 
-export default function BlogEditor({ content, onChange }: BlogEditorProps) {
+export default function BlogEditor({
+  content,
+  onChange,
+  onImageUpload,
+}: BlogEditorProps) {
+  const [showVideoModal, setShowVideoModal] = useState(false);
+  const [videoUrl, setVideoUrl] = useState("");
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [imageUrl, setImageUrl] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -19,13 +35,38 @@ export default function BlogEditor({ content, onChange }: BlogEditorProps) {
           levels: [1, 2, 3],
         },
       }),
-      Image,
+      Image.configure({
+        allowBase64: true,
+        HTMLAttributes: {
+          class: "mx-auto rounded-lg max-w-full",
+        },
+      }),
       Link.configure({
         openOnClick: false,
+        HTMLAttributes: {
+          class: "text-[#1a8917] hover:underline cursor-pointer",
+        },
       }),
       Placeholder.configure({
-        placeholder: "Start writing your blog post...",
+        placeholder: ({ node }) => {
+          if (node.type.name === "heading") {
+            return "Heading...";
+          }
+          return "Tell your story...";
+        },
       }),
+      Youtube.configure({
+        width: 680,
+        height: 400,
+        HTMLAttributes: {
+          class: "mx-auto rounded-lg",
+        },
+      }),
+      Dropcursor.configure({
+        color: "#1a8917",
+        width: 2,
+      }),
+      Gapcursor,
     ],
     content,
     immediatelyRender: false,
@@ -34,164 +75,476 @@ export default function BlogEditor({ content, onChange }: BlogEditorProps) {
     },
     editorProps: {
       attributes: {
-        class: "prose prose-lg max-w-none min-h-[400px] focus:outline-none p-6",
+        class:
+          "prose prose-lg max-w-none min-h-[500px] focus:outline-none px-4 py-6 font-serif",
+      },
+      handleDrop: (view, event, slice, moved) => {
+        if (!moved && event.dataTransfer?.files.length) {
+          const file = event.dataTransfer.files[0];
+          if (file.type.startsWith("image/")) {
+            handleImageUpload(file);
+            return true;
+          }
+        }
+        return false;
+      },
+      handlePaste: (view, event) => {
+        const items = event.clipboardData?.items;
+        if (items) {
+          for (const item of items) {
+            if (item.type.startsWith("image/")) {
+              const file = item.getAsFile();
+              if (file) {
+                handleImageUpload(file);
+                return true;
+              }
+            }
+          }
+        }
+        return false;
       },
     },
   });
 
+  const handleImageUpload = useCallback(
+    async (file: File) => {
+      if (!editor || !onImageUpload) return;
+
+      setUploading(true);
+      try {
+        const url = await onImageUpload(file);
+        editor.chain().focus().setImage({ src: url }).run();
+      } catch (error) {
+        console.error("Failed to upload image:", error);
+      } finally {
+        setUploading(false);
+      }
+    },
+    [editor, onImageUpload],
+  );
+
+  const insertImage = useCallback(() => {
+    if (!editor) return;
+
+    if (imageUrl) {
+      editor.chain().focus().setImage({ src: imageUrl }).run();
+      setImageUrl("");
+      setShowImageModal(false);
+    }
+  }, [editor, imageUrl]);
+
+  const insertVideo = useCallback(() => {
+    if (!editor) return;
+
+    if (videoUrl) {
+      editor.commands.setYoutubeVideo({ src: videoUrl });
+      setVideoUrl("");
+      setShowVideoModal(false);
+    }
+  }, [editor, videoUrl]);
+
+  const triggerFileUpload = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleImageUpload(file);
+    }
+    e.target.value = "";
+  };
+
+  const addLink = () => {
+    const url = window.prompt("Enter URL:");
+    if (url && editor) {
+      editor.chain().focus().setLink({ href: url }).run();
+    }
+  };
+
   if (!editor) {
-    return (
-      <div className="min-h-[400px] bg-white rounded-2xl border border-[#E4E4E7] animate-pulse" />
-    );
+    return <div className="min-h-[500px] bg-white rounded-xl animate-pulse" />;
   }
 
   return (
-    <div className="border border-[#E4E4E7] rounded-2xl overflow-hidden bg-white shadow-sm">
-      {/* Toolbar */}
-      <div className="p-3 border-b border-[#E4E4E7] bg-gradient-to-r from-[#FAFAFA] to-[#F4F4F5]">
-        {/* Text Formatting */}
-        <div className="flex flex-wrap items-center gap-1">
-          <span className="text-xs text-[#71717A] font-medium px-2 hidden sm:inline">
-            Format
-          </span>
-          <div className="flex items-center gap-0.5 bg-white rounded-lg p-1 border border-[#E4E4E7]">
+    <div className="relative">
+      {/* Hidden file input */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        accept="image/*"
+        className="hidden"
+      />
+
+      {/* Editor Container */}
+      <div className="border border-gray-200 rounded-xl bg-white overflow-hidden">
+        {/* Toolbar */}
+        <div className="border-b border-gray-100 bg-gray-50/50 px-4 py-3 flex flex-wrap items-center gap-1">
+          {/* Media */}
+          <div className="flex items-center gap-1 mr-2">
             <ToolbarButton
-              onClick={() => editor.chain().focus().toggleBold().run()}
-              active={editor.isActive("bold")}
-              title="Bold (Ctrl+B)"
+              onClick={triggerFileUpload}
+              title="Upload image"
+              disabled={uploading}
             >
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M15.6 10.79c.97-.67 1.65-1.77 1.65-2.79 0-2.26-1.75-4-4-4H7v14h7.04c2.09 0 3.71-1.7 3.71-3.79 0-1.52-.86-2.82-2.15-3.42zM10 6.5h3c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-3v-3zm3.5 9H10v-3h3.5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5z" />
+              {uploading ? (
+                <svg
+                  className="w-5 h-5 animate-spin"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                  />
+                </svg>
+              ) : (
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+              )}
+            </ToolbarButton>
+
+            <ToolbarButton
+              onClick={() => setShowImageModal(true)}
+              title="Insert image from URL"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                />
               </svg>
             </ToolbarButton>
+
             <ToolbarButton
-              onClick={() => editor.chain().focus().toggleItalic().run()}
-              active={editor.isActive("italic")}
-              title="Italic (Ctrl+I)"
+              onClick={() => setShowVideoModal(true)}
+              title="Embed YouTube video"
             >
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M10 4v3h2.21l-3.42 8H6v3h8v-3h-2.21l3.42-8H18V4z" />
-              </svg>
-            </ToolbarButton>
-            <ToolbarButton
-              onClick={() => editor.chain().focus().toggleStrike().run()}
-              active={editor.isActive("strike")}
-              title="Strikethrough"
-            >
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M10 19h4v-3h-4v3zM5 4v3h5v3h4V7h5V4H5zM3 14h18v-2H3v2z" />
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
             </ToolbarButton>
           </div>
 
-          <div className="w-px h-6 bg-[#E4E4E7] mx-1 hidden sm:block" />
+          <div className="h-6 w-px bg-gray-200" />
 
-          <span className="text-xs text-[#71717A] font-medium px-2 hidden sm:inline">
-            Headings
-          </span>
-          <div className="flex items-center gap-0.5 bg-white rounded-lg p-1 border border-[#E4E4E7]">
+          {/* Text Formatting */}
+          <div className="flex items-center gap-1 mx-2">
+            <ToolbarButton
+              onClick={() => editor.chain().focus().toggleBold().run()}
+              isActive={editor.isActive("bold")}
+              title="Bold (Ctrl+B)"
+            >
+              <span className="font-bold text-sm">B</span>
+            </ToolbarButton>
+
+            <ToolbarButton
+              onClick={() => editor.chain().focus().toggleItalic().run()}
+              isActive={editor.isActive("italic")}
+              title="Italic (Ctrl+I)"
+            >
+              <span className="italic text-sm">I</span>
+            </ToolbarButton>
+
+            <ToolbarButton
+              onClick={addLink}
+              isActive={editor.isActive("link")}
+              title="Add link"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                />
+              </svg>
+            </ToolbarButton>
+          </div>
+
+          <div className="h-6 w-px bg-gray-200" />
+
+          {/* Headings */}
+          <div className="flex items-center gap-1 mx-2">
             <ToolbarButton
               onClick={() =>
                 editor.chain().focus().toggleHeading({ level: 1 }).run()
               }
-              active={editor.isActive("heading", { level: 1 })}
+              isActive={editor.isActive("heading", { level: 1 })}
               title="Heading 1"
             >
-              <span className="font-bold text-xs">H1</span>
+              <span className="font-bold text-sm">H1</span>
             </ToolbarButton>
+
             <ToolbarButton
               onClick={() =>
                 editor.chain().focus().toggleHeading({ level: 2 }).run()
               }
-              active={editor.isActive("heading", { level: 2 })}
+              isActive={editor.isActive("heading", { level: 2 })}
               title="Heading 2"
             >
-              <span className="font-bold text-xs">H2</span>
+              <span className="font-bold text-sm">H2</span>
             </ToolbarButton>
+
             <ToolbarButton
               onClick={() =>
                 editor.chain().focus().toggleHeading({ level: 3 }).run()
               }
-              active={editor.isActive("heading", { level: 3 })}
+              isActive={editor.isActive("heading", { level: 3 })}
               title="Heading 3"
             >
-              <span className="font-bold text-xs">H3</span>
+              <span className="font-bold text-sm">H3</span>
             </ToolbarButton>
           </div>
 
-          <div className="w-px h-6 bg-[#E4E4E7] mx-1 hidden sm:block" />
+          <div className="h-6 w-px bg-gray-200" />
 
-          <span className="text-xs text-[#71717A] font-medium px-2 hidden sm:inline">
-            Lists
-          </span>
-          <div className="flex items-center gap-0.5 bg-white rounded-lg p-1 border border-[#E4E4E7]">
+          {/* Lists & Blocks */}
+          <div className="flex items-center gap-1 mx-2">
             <ToolbarButton
               onClick={() => editor.chain().focus().toggleBulletList().run()}
-              active={editor.isActive("bulletList")}
-              title="Bullet List"
+              isActive={editor.isActive("bulletList")}
+              title="Bullet list"
             >
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M4 10.5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5zm0-6c-.83 0-1.5.67-1.5 1.5S3.17 7.5 4 7.5 5.5 6.83 5.5 6 4.83 4.5 4 4.5zm0 12c-.83 0-1.5.68-1.5 1.5s.68 1.5 1.5 1.5 1.5-.68 1.5-1.5-.67-1.5-1.5-1.5zM7 19h14v-2H7v2zm0-6h14v-2H7v2zm0-8v2h14V5H7z" />
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
               </svg>
             </ToolbarButton>
+
             <ToolbarButton
               onClick={() => editor.chain().focus().toggleOrderedList().run()}
-              active={editor.isActive("orderedList")}
-              title="Numbered List"
+              isActive={editor.isActive("orderedList")}
+              title="Numbered list"
             >
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M2 17h2v.5H3v1h1v.5H2v1h3v-4H2v1zm1-9h1V4H2v1h1v3zm-1 3h1.8L2 13.1v.9h3v-1H3.2L5 10.9V10H2v1zm5-6v2h14V5H7zm0 14h14v-2H7v2zm0-6h14v-2H7v2z" />
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M7 8h10M7 12h10M7 16h10M3 8h.01M3 12h.01M3 16h.01"
+                />
               </svg>
             </ToolbarButton>
+
             <ToolbarButton
               onClick={() => editor.chain().focus().toggleBlockquote().run()}
-              active={editor.isActive("blockquote")}
+              isActive={editor.isActive("blockquote")}
               title="Quote"
             >
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M6 17h3l2-4V7H5v6h3zm8 0h3l2-4V7h-6v6h3z" />
               </svg>
             </ToolbarButton>
+
             <ToolbarButton
               onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-              active={editor.isActive("codeBlock")}
-              title="Code Block"
+              isActive={editor.isActive("codeBlock")}
+              title="Code block"
             >
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z" />
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
+                />
               </svg>
             </ToolbarButton>
           </div>
         </div>
+
+        {/* Editor Content */}
+        <EditorContent editor={editor} />
       </div>
 
-      {/* Editor */}
-      <EditorContent editor={editor} />
+      {/* Video Modal */}
+      {showVideoModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
+            <h3 className="text-lg font-semibold mb-4">Embed YouTube Video</h3>
+            <input
+              type="url"
+              value={videoUrl}
+              onChange={(e) => setVideoUrl(e.target.value)}
+              placeholder="Paste YouTube URL..."
+              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a8917] mb-4"
+              autoFocus
+            />
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowVideoModal(false)}
+                className="px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={insertVideo}
+                disabled={!videoUrl}
+                className="px-4 py-2 bg-[#1a8917] text-white rounded-lg hover:bg-[#157313] transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                Embed
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Image URL Modal */}
+      {showImageModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
+            <h3 className="text-lg font-semibold mb-4">Insert Image</h3>
+            <input
+              type="url"
+              value={imageUrl}
+              onChange={(e) => setImageUrl(e.target.value)}
+              placeholder="Paste image URL or GIF URL..."
+              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a8917] mb-4"
+              autoFocus
+            />
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowImageModal(false)}
+                className="px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={insertImage}
+                disabled={!imageUrl}
+                className="px-4 py-2 bg-[#1a8917] text-white rounded-lg hover:bg-[#157313] transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                Insert
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Upload indicator */}
+      {uploading && (
+        <div className="absolute inset-0 bg-white/80 flex items-center justify-center rounded-xl">
+          <div className="flex items-center gap-3 text-gray-600">
+            <svg
+              className="w-6 h-6 animate-spin"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+              />
+            </svg>
+            <span>Uploading image...</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 function ToolbarButton({
   onClick,
-  active,
+  isActive = false,
   title,
+  disabled = false,
   children,
 }: {
   onClick: () => void;
-  active: boolean;
+  isActive?: boolean;
   title: string;
+  disabled?: boolean;
   children: React.ReactNode;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
+      disabled={disabled}
       title={title}
-      className={`p-2 rounded-md font-semibold text-sm transition-all duration-150 cursor-pointer min-w-[32px] min-h-[32px] flex items-center justify-center ${
-        active
-          ? "bg-[#2563EB] text-white shadow-sm"
-          : "text-[#3F3F46] hover:bg-[#EFF6FF] hover:text-[#2563EB]"
-      }`}
+      className={`p-2 rounded-lg transition-colors cursor-pointer min-w-[36px] min-h-[36px] flex items-center justify-center ${
+        isActive
+          ? "bg-[#1a8917]/10 text-[#1a8917]"
+          : "text-gray-500 hover:bg-gray-100 hover:text-gray-900"
+      } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
     >
       {children}
     </button>

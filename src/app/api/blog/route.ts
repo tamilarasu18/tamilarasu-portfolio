@@ -1,57 +1,113 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const GITHUB_API_URL = "https://api.github.com/gists";
+const GITHUB_API_URL = "https://api.github.com";
+const GITHUB_REPO = "tamilarasu18/tamilarasu-portfolio-blog";
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+
+interface BlogPostMeta {
+  title: string;
+  slug: string;
+  excerpt: string;
+  coverImage?: string;
+  author: {
+    name: string;
+    avatar?: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+  tags: string[];
+  readingTime?: number;
+}
+
+interface BlogPost extends BlogPostMeta {
+  content: string;
+}
+
+// Helper to generate slug from title
+function generateSlug(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
+// Helper to calculate reading time
+function calculateReadingTime(content: string): number {
+  const text = content.replace(/<[^>]*>/g, "");
+  const words = text.split(/\s+/).filter(Boolean).length;
+  return Math.max(1, Math.ceil(words / 200));
+}
+
+// Helper to extract excerpt from content
+function extractExcerpt(content: string, maxLength: number = 160): string {
+  const text = content.replace(/<[^>]*>/g, "");
+  if (text.length <= maxLength) return text;
+  return text.substring(0, maxLength).trim() + "...";
+}
 
 export async function GET() {
   try {
-    // Fetch public gists - no token needed for reading public gists
-    // We'll fetch from a specific user's gists for the blog
-    const username = process.env.GITHUB_USERNAME || "tamilarasu18";
+    // Fetch posts directory from repo
     const response = await fetch(
-      `https://api.github.com/users/${username}/gists?per_page=100`,
+      `${GITHUB_API_URL}/repos/${GITHUB_REPO}/contents/posts`,
       {
         headers: {
           Accept: "application/vnd.github.v3+json",
+          ...(GITHUB_TOKEN && { Authorization: `Bearer ${GITHUB_TOKEN}` }),
         },
-        next: { revalidate: 60 }, // Cache for 60 seconds
+        next: { revalidate: 60 },
       },
     );
 
     if (!response.ok) {
-      throw new Error("Failed to fetch gists");
+      // If posts folder doesn't exist yet, return empty array
+      if (response.status === 404) {
+        return NextResponse.json([]);
+      }
+      throw new Error("Failed to fetch posts");
     }
 
-    const gists = await response.json();
+    const files = await response.json();
 
-    // Filter only blog posts (gists with a specific file naming convention)
-    const blogPosts = gists
-      .filter((gist: { files: Record<string, { filename: string }> }) => {
-        const files = Object.keys(gist.files);
-        return files.some((file) => file.startsWith("blog_"));
-      })
-      .map(
-        (gist: {
-          id: string;
-          description: string;
-          files: Record<string, { filename: string; content?: string }>;
-          created_at: string;
-          updated_at: string;
-        }) => {
-          const blogFile = Object.values(gist.files).find((file) =>
-            file.filename.startsWith("blog_"),
-          );
+    // Filter only .json files and fetch each post's content
+    const jsonFiles = files.filter(
+      (file: { name: string }) =>
+        file.name.endsWith(".json") && file.name !== "index.json",
+    );
+
+    const posts: BlogPostMeta[] = await Promise.all(
+      jsonFiles.map(async (file: { download_url: string; name: string }) => {
+        try {
+          const contentRes = await fetch(file.download_url, {
+            next: { revalidate: 60 },
+          });
+          const post: BlogPost = await contentRes.json();
           return {
-            id: gist.id,
-            title: gist.description || "Untitled",
-            filename: blogFile?.filename,
-            createdAt: gist.created_at,
-            updatedAt: gist.updated_at,
+            slug: post.slug || file.name.replace(".json", ""),
+            title: post.title,
+            excerpt: post.excerpt,
+            coverImage: post.coverImage,
+            author: post.author,
+            createdAt: post.createdAt,
+            updatedAt: post.updatedAt,
+            tags: post.tags || [],
+            readingTime: post.readingTime,
           };
-        },
+        } catch {
+          return null;
+        }
+      }),
+    );
+
+    // Filter out failed fetches and sort by date (newest first)
+    const validPosts = posts
+      .filter((p): p is BlogPostMeta => p !== null)
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
       );
 
-    return NextResponse.json(blogPosts);
+    return NextResponse.json(validPosts);
   } catch (error) {
     console.error("Error fetching blogs:", error);
     return NextResponse.json(
@@ -71,7 +127,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { title, content, author, password } = body;
+    const { title, content, author, password, coverImage, tags } = body;
 
     // Simple password protection
     const adminPassword = process.env.BLOG_ADMIN_PASSWORD || "admin123";
@@ -86,44 +142,58 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create gist with blog content
-    const filename = `blog_${Date.now()}.json`;
-    const blogData = {
+    const slug = generateSlug(title);
+    const now = new Date().toISOString();
+
+    const blogPost: BlogPost = {
       title,
+      slug,
       content,
-      author: author || "Anonymous",
-      createdAt: new Date().toISOString(),
+      excerpt: extractExcerpt(content),
+      coverImage: coverImage || null,
+      author: {
+        name: author || "Tamilarasu",
+        avatar: "/tamilarasu-photo.png",
+      },
+      createdAt: now,
+      updatedAt: now,
+      tags: tags || [],
+      readingTime: calculateReadingTime(content),
     };
 
-    const response = await fetch(GITHUB_API_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${GITHUB_TOKEN}`,
-        Accept: "application/vnd.github.v3+json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        description: title,
-        public: true,
-        files: {
-          [filename]: {
-            content: JSON.stringify(blogData, null, 2),
-          },
-        },
-      }),
-    });
+    // Create file in repo via GitHub API
+    const filePath = `posts/${slug}.json`;
+    const fileContent = Buffer.from(JSON.stringify(blogPost, null, 2)).toString(
+      "base64",
+    );
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || "Failed to create gist");
+    const createResponse = await fetch(
+      `${GITHUB_API_URL}/repos/${GITHUB_REPO}/contents/${filePath}`,
+      {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${GITHUB_TOKEN}`,
+          Accept: "application/vnd.github.v3+json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: `Add blog post: ${title}`,
+          content: fileContent,
+          branch: "main",
+        }),
+      },
+    );
+
+    if (!createResponse.ok) {
+      const error = await createResponse.json();
+      console.error("GitHub API error:", error);
+      throw new Error(error.message || "Failed to create blog post");
     }
 
-    const gist = await response.json();
-
     return NextResponse.json({
-      id: gist.id,
+      slug,
       title,
-      url: gist.html_url,
+      message: "Blog post created successfully",
     });
   } catch (error) {
     console.error("Error creating blog:", error);

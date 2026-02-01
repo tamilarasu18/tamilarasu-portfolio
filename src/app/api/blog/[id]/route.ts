@@ -1,18 +1,43 @@
 import { NextRequest, NextResponse } from "next/server";
 
+const GITHUB_API_URL = "https://api.github.com";
+const GITHUB_REPO = "tamilarasu18/tamilarasu-portfolio-blog";
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+
+interface BlogPost {
+  title: string;
+  slug: string;
+  content: string;
+  excerpt: string;
+  coverImage?: string;
+  author: {
+    name: string;
+    avatar?: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+  tags: string[];
+  readingTime?: number;
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { id } = await params;
+    const { id: slug } = await params;
 
-    const response = await fetch(`https://api.github.com/gists/${id}`, {
-      headers: {
-        Accept: "application/vnd.github.v3+json",
+    // Fetch the blog post file from repo
+    const response = await fetch(
+      `${GITHUB_API_URL}/repos/${GITHUB_REPO}/contents/posts/${slug}.json`,
+      {
+        headers: {
+          Accept: "application/vnd.github.v3+json",
+          ...(GITHUB_TOKEN && { Authorization: `Bearer ${GITHUB_TOKEN}` }),
+        },
+        next: { revalidate: 60 },
       },
-      next: { revalidate: 60 },
-    });
+    );
 
     if (!response.ok) {
       return NextResponse.json(
@@ -21,27 +46,23 @@ export async function GET(
       );
     }
 
-    const gist = await response.json();
+    const fileData = await response.json();
 
-    // Find the blog file
-    const blogFile = Object.values(gist.files).find((file: unknown) =>
-      (file as { filename: string }).filename.startsWith("blog_"),
-    ) as { filename: string; content: string } | undefined;
-
-    if (!blogFile) {
-      return NextResponse.json({ error: "Invalid blog post" }, { status: 404 });
-    }
-
-    // Parse the blog content
-    const blogData = JSON.parse(blogFile.content);
+    // Decode base64 content
+    const content = Buffer.from(fileData.content, "base64").toString("utf-8");
+    const post: BlogPost = JSON.parse(content);
 
     return NextResponse.json({
-      id: gist.id,
-      title: blogData.title || gist.description,
-      content: blogData.content,
-      author: blogData.author || "Anonymous",
-      createdAt: blogData.createdAt || gist.created_at,
-      updatedAt: gist.updated_at,
+      slug: post.slug,
+      title: post.title,
+      content: post.content,
+      excerpt: post.excerpt,
+      coverImage: post.coverImage,
+      author: post.author,
+      createdAt: post.createdAt,
+      updatedAt: post.updatedAt,
+      tags: post.tags || [],
+      readingTime: post.readingTime,
     });
   } catch (error) {
     console.error("Error fetching blog:", error);

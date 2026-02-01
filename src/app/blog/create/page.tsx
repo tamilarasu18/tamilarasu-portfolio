@@ -1,19 +1,99 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import BlogEditor from "@/components/BlogEditor";
 
 export default function CreateBlogPage() {
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [author, setAuthor] = useState("");
+  const [coverImage, setCoverImage] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPublishPanel, setShowPublishPanel] = useState(false);
+  const coverInputRef = useRef<HTMLInputElement>(null);
+
+  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!password) {
+      setError("Please enter the admin password first to upload images");
+      return;
+    }
+
+    setUploading(true);
+    setError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("password", password);
+
+      const response = await fetch("/api/blog/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to upload image");
+      }
+
+      const data = await response.json();
+      setCoverImage(data.url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to upload image");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleImageUpload = async (file: File): Promise<string> => {
+    if (!password) {
+      throw new Error("Please enter the admin password first");
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("password", password);
+
+    const response = await fetch("/api/blog/upload", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.error || "Failed to upload image");
+    }
+
+    const data = await response.json();
+    return data.url;
+  };
+
+  const handleAddTag = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" || e.key === ",") {
+      e.preventDefault();
+      const tag = tagInput.trim().toLowerCase();
+      if (tag && !tags.includes(tag) && tags.length < 5) {
+        setTags([...tags, tag]);
+        setTagInput("");
+      }
+    }
+  };
+
+  const handleRemoveTag = (tagToRemove: string) => {
+    setTags(tags.filter((t) => t !== tagToRemove));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,7 +109,8 @@ export default function CreateBlogPage() {
         body: JSON.stringify({
           title,
           content,
-          author: author || "Anonymous",
+          coverImage,
+          tags,
           password,
         }),
       });
@@ -40,7 +121,7 @@ export default function CreateBlogPage() {
       }
 
       const data = await response.json();
-      router.push(`/blog/${data.id}`);
+      router.push(`/blog/${data.slug}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
@@ -49,25 +130,16 @@ export default function CreateBlogPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#FAFAFA] pt-32 pb-16 px-6 relative overflow-hidden">
-      {/* Background decorative elements */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-[#EFF6FF] to-transparent rounded-full transform translate-x-48 -translate-y-48 pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-[#EFF6FF] to-transparent rounded-full transform -translate-x-32 translate-y-32 pointer-events-none" />
-
-      <div className="max-w-4xl mx-auto relative z-10">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="mb-10"
-        >
+    <main className="min-h-screen bg-white">
+      {/* Header */}
+      <header className="fixed top-0 left-0 right-0 bg-white border-b border-gray-100 z-40">
+        <div className="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link
             href="/blog"
-            className="inline-flex items-center gap-2 text-[#71717A] hover:text-[#2563EB] transition-colors mb-8 group"
+            className="text-[#6b6b6b] hover:text-[#242424] transition-colors flex items-center gap-2"
           >
             <svg
-              className="w-4 h-4 transform group-hover:-translate-x-1 transition-transform duration-200"
+              className="w-5 h-5"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -75,216 +147,51 @@ export default function CreateBlogPage() {
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                strokeWidth={2}
+                strokeWidth={1.5}
                 d="M10 19l-7-7m0 0l7-7m-7 7h18"
               />
             </svg>
-            Back to Blog
+            <span className="hidden sm:inline">Back</span>
           </Link>
 
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-gradient-to-br from-[#2563EB] to-[#60A5FA] rounded-xl flex items-center justify-center shadow-lg">
-              <svg
-                className="w-7 h-7 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-[#6b6b6b]">
+              {content.length > 0 ? "Draft" : "New story"}
+            </span>
+            <button
+              onClick={() => setShowPublishPanel(true)}
+              disabled={!title || !content}
+              className="px-4 py-2 bg-[#1a8917] text-white rounded-full text-sm font-medium hover:bg-[#157313] transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            >
+              Publish
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Editor */}
+      <div className="pt-24 pb-16 px-6">
+        <div className="max-w-3xl mx-auto">
+          {/* Cover Image */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="mb-8"
+          >
+            {coverImage ? (
+              <div className="relative aspect-[2/1] rounded-lg overflow-hidden bg-gray-100 group">
+                <Image
+                  src={coverImage}
+                  alt="Cover"
+                  fill
+                  className="object-cover"
                 />
-              </svg>
-            </div>
-            <div>
-              <h1 className="text-3xl lg:text-4xl font-bold text-[#09090B] font-[family-name:var(--font-archivo)]">
-                Create New Post
-              </h1>
-              <p className="text-[#71717A] mt-1">
-                Share your thoughts with the world
-              </p>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Form */}
-        <motion.form
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          onSubmit={handleSubmit}
-          className="space-y-8"
-        >
-          {/* Post Details Card */}
-          <div className="bg-white rounded-2xl p-6 lg:p-8 shadow-sm border border-[#E4E4E7]">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-8 h-8 bg-[#EFF6FF] rounded-lg flex items-center justify-center">
-                <svg
-                  className="w-4 h-4 text-[#2563EB]"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+                <button
+                  onClick={() => setCoverImage("")}
+                  className="absolute top-4 right-4 w-8 h-8 bg-black/50 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-              <h2 className="text-lg font-semibold text-[#09090B]">
-                Post Details
-              </h2>
-            </div>
-
-            <div className="space-y-5">
-              {/* Title */}
-              <div>
-                <label
-                  htmlFor="title"
-                  className="block text-sm font-medium text-[#3F3F46] mb-2"
-                >
-                  Title <span className="text-[#EF4444]">*</span>
-                </label>
-                <div className="relative">
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#A1A1AA]">
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4 6h16M4 12h16M4 18h7"
-                      />
-                    </svg>
-                  </div>
-                  <input
-                    type="text"
-                    id="title"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    required
-                    placeholder="Enter your blog title"
-                    className="w-full pl-12 pr-4 py-3.5 rounded-xl border border-[#E4E4E7] bg-white focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-transparent transition-all placeholder:text-[#A1A1AA]"
-                  />
-                </div>
-              </div>
-
-              {/* Author */}
-              <div>
-                <label
-                  htmlFor="author"
-                  className="block text-sm font-medium text-[#3F3F46] mb-2"
-                >
-                  Author Name
-                </label>
-                <div className="relative">
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#A1A1AA]">
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                      />
-                    </svg>
-                  </div>
-                  <input
-                    type="text"
-                    id="author"
-                    value={author}
-                    onChange={(e) => setAuthor(e.target.value)}
-                    placeholder="Your name (optional)"
-                    className="w-full pl-12 pr-4 py-3.5 rounded-xl border border-[#E4E4E7] bg-white focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-transparent transition-all placeholder:text-[#A1A1AA]"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Content Editor Card */}
-          <div className="bg-white rounded-2xl p-6 lg:p-8 shadow-sm border border-[#E4E4E7]">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-8 h-8 bg-[#EFF6FF] rounded-lg flex items-center justify-center">
-                <svg
-                  className="w-4 h-4 text-[#2563EB]"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                  />
-                </svg>
-              </div>
-              <div className="flex-1">
-                <h2 className="text-lg font-semibold text-[#09090B]">
-                  Content <span className="text-[#EF4444]">*</span>
-                </h2>
-                <p className="text-sm text-[#71717A]">
-                  Use the toolbar to format your post
-                </p>
-              </div>
-            </div>
-
-            <BlogEditor content={content} onChange={setContent} />
-          </div>
-
-          {/* Publish Card */}
-          <div className="bg-white rounded-2xl p-6 lg:p-8 shadow-sm border border-[#E4E4E7]">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-8 h-8 bg-[#FEF2F2] rounded-lg flex items-center justify-center">
-                <svg
-                  className="w-4 h-4 text-[#EF4444]"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                  />
-                </svg>
-              </div>
-              <div className="flex-1">
-                <h2 className="text-lg font-semibold text-[#09090B]">
-                  Authentication
-                </h2>
-                <p className="text-sm text-[#71717A]">
-                  Admin password required to publish
-                </p>
-              </div>
-            </div>
-
-            {/* Password */}
-            <div className="mb-6">
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-[#3F3F46] mb-2"
-              >
-                Admin Password <span className="text-[#EF4444]">*</span>
-              </label>
-              <div className="relative">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#A1A1AA]">
                   <svg
-                    className="w-5 h-5"
+                    className="w-4 h-4"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -293,57 +200,21 @@ export default function CreateBlogPage() {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
+                      d="M6 18L18 6M6 6l12 12"
                     />
                   </svg>
-                </div>
-                <input
-                  type="password"
-                  id="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  placeholder="Enter admin password to publish"
-                  className="w-full pl-12 pr-4 py-3.5 rounded-xl border border-[#E4E4E7] bg-white focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-transparent transition-all placeholder:text-[#A1A1AA]"
-                />
+                </button>
               </div>
-            </div>
-
-            {/* Error */}
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="p-4 bg-[#FEF2F2] border border-[#FECACA] rounded-xl text-[#DC2626] mb-6 flex items-center gap-3"
-              >
-                <svg
-                  className="w-5 h-5 flex-shrink-0"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                {error}
-              </motion.div>
-            )}
-
-            {/* Submit */}
-            <div className="flex flex-col sm:flex-row gap-4">
+            ) : (
               <button
-                type="submit"
-                disabled={loading || !title || !content}
-                className="flex-1 sm:flex-none px-8 py-4 bg-gradient-to-r from-[#2563EB] to-[#3B82F6] text-white rounded-xl font-semibold hover:from-[#1D4ED8] hover:to-[#2563EB] transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-lg hover:shadow-xl disabled:hover:shadow-lg flex items-center justify-center gap-2"
+                onClick={() => coverInputRef.current?.click()}
+                disabled={uploading}
+                className="w-full aspect-[3/1] border-2 border-dashed border-gray-200 rounded-lg flex flex-col items-center justify-center text-[#6b6b6b] hover:border-[#1a8917] hover:text-[#1a8917] transition-colors cursor-pointer"
               >
-                {loading ? (
+                {uploading ? (
                   <>
                     <svg
-                      className="w-5 h-5 animate-spin"
+                      className="w-8 h-8 animate-spin mb-2"
                       fill="none"
                       viewBox="0 0 24 24"
                     >
@@ -358,15 +229,15 @@ export default function CreateBlogPage() {
                       <path
                         className="opacity-75"
                         fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
                       />
                     </svg>
-                    Publishing...
+                    <span className="text-sm">Uploading...</span>
                   </>
                 ) : (
                   <>
                     <svg
-                      className="w-5 h-5"
+                      className="w-8 h-8 mb-2"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -374,24 +245,195 @@ export default function CreateBlogPage() {
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                        strokeWidth={1.5}
+                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
                       />
                     </svg>
-                    Publish Post
+                    <span className="text-sm">Add a cover image</span>
                   </>
                 )}
               </button>
-              <Link
-                href="/blog"
-                className="flex-1 sm:flex-none px-8 py-4 border-2 border-[#E4E4E7] text-[#3F3F46] rounded-xl font-semibold hover:border-[#2563EB] hover:text-[#2563EB] transition-all text-center"
-              >
-                Cancel
-              </Link>
-            </div>
-          </div>
-        </motion.form>
+            )}
+            <input
+              ref={coverInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleCoverUpload}
+              className="hidden"
+            />
+          </motion.div>
+
+          {/* Title */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6"
+          >
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Title"
+              className="w-full text-4xl md:text-5xl font-bold text-[#242424] placeholder:text-gray-300 focus:outline-none font-serif"
+            />
+          </motion.div>
+
+          {/* Editor */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <BlogEditor
+              content={content}
+              onChange={setContent}
+              onImageUpload={handleImageUpload}
+            />
+          </motion.div>
+        </div>
       </div>
+
+      {/* Publish Panel */}
+      {showPublishPanel && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-6">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-xl w-full max-w-lg shadow-2xl"
+          >
+            <form onSubmit={handleSubmit}>
+              <div className="p-6 border-b border-gray-100">
+                <h2 className="text-xl font-bold text-[#242424] mb-1">
+                  Ready to publish?
+                </h2>
+                <p className="text-[#6b6b6b] text-sm">
+                  Add tags and authenticate to publish your story.
+                </p>
+              </div>
+
+              <div className="p-6 space-y-6">
+                {/* Tags */}
+                <div>
+                  <label className="block text-sm font-medium text-[#242424] mb-2">
+                    Tags
+                  </label>
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 text-[#242424] rounded-full text-sm"
+                      >
+                        {tag}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveTag(tag)}
+                          className="text-[#6b6b6b] hover:text-[#242424] cursor-pointer"
+                        >
+                          <svg
+                            className="w-3 h-3"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                  <input
+                    type="text"
+                    value={tagInput}
+                    onChange={(e) => setTagInput(e.target.value)}
+                    onKeyDown={handleAddTag}
+                    placeholder="Add up to 5 tags..."
+                    disabled={tags.length >= 5}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a8917] text-sm"
+                  />
+                </div>
+
+                {/* Password */}
+                <div>
+                  <label className="block text-sm font-medium text-[#242424] mb-2">
+                    Admin Password
+                  </label>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    placeholder="Enter password to publish"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a8917] text-sm"
+                  />
+                </div>
+
+                {/* Error */}
+                {error && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm flex items-center gap-2">
+                    <svg
+                      className="w-4 h-4 flex-shrink-0"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    {error}
+                  </div>
+                )}
+              </div>
+
+              <div className="p-6 border-t border-gray-100 flex gap-3 justify-end">
+                <button
+                  type="button"
+                  onClick={() => setShowPublishPanel(false)}
+                  className="px-6 py-2 text-[#6b6b6b] hover:text-[#242424] transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading || !password}
+                  className="px-6 py-2 bg-[#1a8917] text-white rounded-full font-medium hover:bg-[#157313] transition-colors disabled:opacity-50 cursor-pointer flex items-center gap-2"
+                >
+                  {loading ? (
+                    <>
+                      <svg
+                        className="w-4 h-4 animate-spin"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                        />
+                      </svg>
+                      Publishing...
+                    </>
+                  ) : (
+                    "Publish now"
+                  )}
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
     </main>
   );
 }
