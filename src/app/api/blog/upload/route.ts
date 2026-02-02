@@ -69,8 +69,12 @@ export async function POST(request: NextRequest) {
     const bytes = await file.arrayBuffer();
     const base64Content = Buffer.from(bytes).toString("base64");
 
-    // Upload to GitHub repo
-    const filePath = `media/${filename}`;
+    // Create date-based folder path (YYYY-MM-DD)
+    const today = new Date();
+    const dateFolder = today.toISOString().split("T")[0]; // e.g., "2026-02-02"
+
+    // Upload to GitHub repo with date-based folder
+    const filePath = `media/${dateFolder}/${filename}`;
     const uploadResponse = await fetch(
       `${GITHUB_API_URL}/repos/${GITHUB_REPO}/contents/${filePath}`,
       {

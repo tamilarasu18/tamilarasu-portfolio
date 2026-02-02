@@ -153,7 +153,7 @@ export async function POST(request: NextRequest) {
       coverImage: coverImage || null,
       author: {
         name: author || "Tamilarasu",
-        avatar: "/tamilarasu-photo.png",
+        avatar: "/avatar.png",
       },
       createdAt: now,
       updatedAt: now,
