@@ -129,19 +129,36 @@ export default function BlogPostPage({
 
   return (
     <main className="min-h-screen bg-white">
-      {/* Progress bar could go here */}
-
-      <article className="pt-24 pb-16 px-6">
-        <div className="max-w-3xl mx-auto">
-          {/* Back Link */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
+      {/* Fixed Header */}
+      <header className="fixed top-0 left-0 right-0 bg-white border-b border-gray-100 z-40">
+        <div className="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">
+          <Link
+            href="/blog"
+            className="text-[#6b6b6b] hover:text-[#242424] transition-colors flex items-center gap-2"
           >
-            <Link
-              href="/blog"
-              className="inline-flex items-center gap-2 text-[#6b6b6b] hover:text-[#242424] transition-colors mb-8 text-sm"
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M10 19l-7-7m0 0l7-7m-7 7h18"
+              />
+            </svg>
+            <span className="hidden sm:inline">Back</span>
+          </Link>
+
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-[#6b6b6b]">
+              {post.readingTime || 5} min read
+            </span>
+            <button
+              onClick={handleShare}
+              className="px-4 py-2 bg-[#2563EB] text-white rounded-full text-sm font-medium hover:bg-[#1D4ED8] transition-colors cursor-pointer flex items-center gap-2"
             >
               <svg
                 className="w-4 h-4"
@@ -153,13 +170,17 @@ export default function BlogPostPage({
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={1.5}
-                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                  d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
                 />
               </svg>
-              All Stories
-            </Link>
-          </motion.div>
+              {copied ? "Copied!" : "Share"}
+            </button>
+          </div>
+        </div>
+      </header>
 
+      <article className="pt-24 pb-16 px-6">
+        <div className="max-w-3xl mx-auto">
           {/* Header */}
           <motion.header
             initial={{ opacity: 0, y: 20 }}
