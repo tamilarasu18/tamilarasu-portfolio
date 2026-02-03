@@ -142,7 +142,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const slug = generateSlug(title);
+    const slug = body.slug || generateSlug(title);
     const now = new Date().toISOString();
 
     const blogPost: BlogPost = {
