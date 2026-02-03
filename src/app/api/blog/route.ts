@@ -167,6 +167,24 @@ export async function POST(request: NextRequest) {
       "base64",
     );
 
+    // Check if file exists to get SHA for update
+    let sha: string | undefined;
+    const checkResponse = await fetch(
+      `${GITHUB_API_URL}/repos/${GITHUB_REPO}/contents/${filePath}`,
+      {
+        headers: {
+          Authorization: `Bearer ${GITHUB_TOKEN}`,
+          Accept: "application/vnd.github.v3+json",
+        },
+        cache: "no-store",
+      },
+    );
+
+    if (checkResponse.ok) {
+      const existingFile = await checkResponse.json();
+      sha = existingFile.sha;
+    }
+
     const createResponse = await fetch(
       `${GITHUB_API_URL}/repos/${GITHUB_REPO}/contents/${filePath}`,
       {
@@ -177,9 +195,12 @@ export async function POST(request: NextRequest) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          message: `Add blog post: ${title}`,
+          message: sha
+            ? `Update blog post: ${title}`
+            : `Add blog post: ${title}`,
           content: fileContent,
           branch: "main",
+          sha, // Include sha if updating
         }),
       },
     );
@@ -198,7 +219,9 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Error creating blog:", error);
     return NextResponse.json(
-      { error: "Failed to create blog post" },
+      {
+        error: `Failed to create blog post: ${error instanceof Error ? error.message : String(error)}`,
+      },
       { status: 500 },
     );
   }

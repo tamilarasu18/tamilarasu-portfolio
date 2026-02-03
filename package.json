@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@floating-ui/dom": "^1.7.5",
+    "@tailwindcss/typography": "^0.5.19",
     "@tiptap/extension-bubble-menu": "^3.18.0",
     "@tiptap/extension-dropcursor": "^3.18.0",
     "@tiptap/extension-floating-menu": "^3.18.0",
@@ -26,6 +27,8 @@
     "next": "16.1.6",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
     "slugify": "^1.6.6"
   },
   "devDependencies": {

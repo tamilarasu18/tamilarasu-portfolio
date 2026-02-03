@@ -1,16 +1,17 @@
-@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap");
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 :root {
-  --background: #FAFAFA;
-  --foreground: #09090B;
-  --primary: #2563EB;
-  --primary-hover: #1D4ED8;
-  --secondary: #3F3F46;
-  --muted: #71717A;
-  --card: #FFFFFF;
-  --card-border: #E4E4E7;
-  --accent: #EFF6FF;
+  --background: #fafafa;
+  --foreground: #09090b;
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --secondary: #3f3f46;
+  --muted: #71717a;
+  --card: #ffffff;
+  --card-border: #e4e4e7;
+  --accent: #eff6ff;
 }
 
 @theme inline {
@@ -23,18 +24,23 @@
   --color-card: var(--card);
   --color-card-border: var(--card-border);
   --color-accent: var(--accent);
-  --font-sans: 'Space Grotesk', sans-serif;
-  --font-heading: 'Archivo', sans-serif;
+  --font-sans: "Space Grotesk", sans-serif;
+  --font-heading: "Archivo", sans-serif;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: "Space Grotesk", sans-serif;
 }
 
-h1, h2, h3, h4, h5, h6 {
-  font-family: 'Archivo', sans-serif;
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: "Archivo", sans-serif;
 }
 
 /* Custom scrollbar */
@@ -65,8 +71,10 @@ html {
   html {
     scroll-behavior: auto;
   }
-  
-  *, *::before, *::after {
+
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
@@ -91,7 +99,7 @@ html {
   font-weight: 700;
   margin-top: 1.5rem;
   margin-bottom: 0.75rem;
-  font-family: 'Archivo', sans-serif;
+  font-family: "Archivo", sans-serif;
 }
 
 .ProseMirror h2 {
@@ -99,7 +107,7 @@ html {
   font-weight: 600;
   margin-top: 1.25rem;
   margin-bottom: 0.5rem;
-  font-family: 'Archivo', sans-serif;
+  font-family: "Archivo", sans-serif;
 }
 
 .ProseMirror h3 {
@@ -107,7 +115,7 @@ html {
   font-weight: 600;
   margin-top: 1rem;
   margin-bottom: 0.5rem;
-  font-family: 'Archivo', sans-serif;
+  font-family: "Archivo", sans-serif;
 }
 
 .ProseMirror p {

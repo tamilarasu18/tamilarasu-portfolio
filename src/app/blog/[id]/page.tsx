@@ -247,18 +247,7 @@ export default function BlogPostPage({
             transition={{ duration: 0.5, delay: 0.2 }}
           >
             <div
-              className="prose prose-lg max-w-none
-                prose-headings:font-serif prose-headings:font-bold prose-headings:text-[#242424]
-                prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl
-                prose-p:text-[#242424] prose-p:leading-[1.75] prose-p:text-lg
-                prose-a:text-[#2563EB] prose-a:no-underline hover:prose-a:underline
-                prose-strong:text-[#242424]
-                prose-blockquote:border-l-[#2563EB] prose-blockquote:text-[#6b6b6b] prose-blockquote:not-italic prose-blockquote:font-normal
-                prose-code:bg-gray-100 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-[#242424] prose-code:before:content-none prose-code:after:content-none
-                prose-pre:bg-gray-900 prose-pre:text-gray-100
-                prose-img:rounded-lg prose-img:mx-auto
-                prose-ul:text-[#242424] prose-ol:text-[#242424]
-              "
+              className="prose prose-lg max-w-none prose-headings:font-serif prose-headings:font-bold prose-headings:text-[#242424] prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl prose-p:text-[#242424] prose-p:leading-[1.75] prose-p:text-lg prose-a:text-[#2563EB] prose-a:no-underline hover:prose-a:underline prose-strong:text-[#242424] prose-blockquote:border-l-[#2563EB] prose-blockquote:text-[#6b6b6b] prose-blockquote:not-italic prose-blockquote:font-normal prose-code:bg-gray-100 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-[#242424] prose-code:before:content-none prose-code:after:content-none prose-pre:bg-[#1e1e1e] prose-pre:text-gray-100 prose-pre:p-4 prose-pre:rounded-lg prose-img:rounded-xl prose-img:mx-auto prose-img:shadow-lg prose-ul:text-[#242424] prose-ol:text-[#242424]"
               dangerouslySetInnerHTML={{ __html: post.content }}
             />
           </motion.div>
