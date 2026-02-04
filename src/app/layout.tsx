@@ -15,26 +15,70 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "Tamilarasu | Full Stack Developer",
+  metadataBase: new URL("https://tamilarasu-portfolio.vercel.app"),
+  title: {
+    default: "Tamilarasu | Full Stack Developer",
+    template: "%s | Tamilarasu",
+  },
   description:
     "Results-driven Full Stack Developer with 4+ years of experience in Flutter, React, Next.js, and backend development. Passionate about AI and automation.",
   keywords: [
+    "Tamilarasu",
     "Full Stack Developer",
-    "React",
-    "Next.js",
-    "Flutter",
+    "React Developer",
+    "Next.js Developer",
+    "Flutter Developer",
     "FastAPI",
     "MongoDB",
-    "AI",
+    "AI Developer",
+    "Web Developer",
+    "Software Engineer",
+    "Portfolio",
   ],
-  authors: [{ name: "Tamilarasu" }],
+  authors: [
+    { name: "Tamilarasu", url: "https://tamilarasu-portfolio.vercel.app" },
+  ],
+  creator: "Tamilarasu",
   openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://tamilarasu-portfolio.vercel.app",
+    siteName: "Tamilarasu Portfolio",
     title: "Tamilarasu | Full Stack Developer",
     description:
-      "Results-driven Full Stack Developer with 4+ years of experience",
-    type: "website",
+      "Results-driven Full Stack Developer with 4+ years of experience in Flutter, React, Next.js, and backend development.",
+    images: [
+      {
+        url: "/avatar.png",
+        width: 512,
+        height: 512,
+        alt: "Tamilarasu - Full Stack Developer",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Tamilarasu | Full Stack Developer",
+    description:
+      "Results-driven Full Stack Developer with 4+ years of experience in Flutter, React, Next.js, and backend development.",
+    images: ["/avatar.png"],
+    creator: "@tamilarasu",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
   },
   manifest: "/manifest.json",
+  alternates: {
+    canonical: "https://tamilarasu-portfolio.vercel.app",
+  },
 };
 
 export const viewport: Viewport = {
