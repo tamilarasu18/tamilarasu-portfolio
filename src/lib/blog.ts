@@ -17,8 +17,22 @@ export interface BlogPostMeta {
   tags?: string[];
 }
 
+export interface Comment {
+  id: string;
+  author: string;
+  content: string;
+  createdAt: string;
+}
+
+export interface Engagement {
+  likes: number;
+  dislikes: number;
+}
+
 export interface BlogPost extends BlogPostMeta {
   content: string;
+  engagement?: Engagement;
+  comments?: Comment[];
 }
 
 export async function fetchBlogs(): Promise<BlogPostMeta[]> {

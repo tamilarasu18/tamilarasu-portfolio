@@ -5,6 +5,8 @@ import { notFound } from "next/navigation";
 import { fetchBlogPost, fetchBlogs } from "@/lib/blog";
 import { ShareButton } from "../components/ShareButton";
 import { AnimatedContent, AnimatedHeader } from "../components/AnimatedContent";
+import { LikeDislikeButton } from "../components/LikeDislikeButton";
+import { CommentsSection } from "../components/CommentsSection";
 
 const BASE_URL = "https://tamilarasu-portfolio.vercel.app";
 
@@ -249,6 +251,15 @@ export default async function BlogPostPage({
               </AnimatedContent>
             )}
 
+            {/* Engagement - Like/Dislike */}
+            <AnimatedContent
+              delay={0.35}
+              className="mt-8 flex items-center gap-4"
+            >
+              <span className="text-[#6b6b6b] text-sm">Was this helpful?</span>
+              <LikeDislikeButton slug={post.slug} />
+            </AnimatedContent>
+
             {/* Share & Actions */}
             <AnimatedContent
               delay={0.4}
@@ -287,8 +298,13 @@ export default async function BlogPostPage({
               </div>
             </AnimatedContent>
 
+            {/* Comments Section */}
+            <AnimatedContent delay={0.5}>
+              <CommentsSection slug={post.slug} />
+            </AnimatedContent>
+
             {/* More Stories Link */}
-            <AnimatedContent delay={0.5} className="mt-12 text-center">
+            <AnimatedContent delay={0.6} className="mt-12 text-center">
               <Link
                 href="/blog"
                 className="inline-flex items-center gap-2 text-[#2563EB] font-medium hover:underline"
