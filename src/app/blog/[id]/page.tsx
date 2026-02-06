@@ -78,7 +78,13 @@ function generateArticleJsonLd(post: {
   createdAt: string;
   updatedAt: string;
   slug: string;
+  readingTime?: number;
+  tags?: string[];
 }) {
+  // Estimate word count from content (strip HTML tags)
+  const textContent = post.content.replace(/<[^>]*>/g, " ");
+  const wordCount = textContent.split(/\s+/).filter(Boolean).length;
+
   return {
     "@context": "https://schema.org",
     "@type": "Article",
@@ -87,6 +93,9 @@ function generateArticleJsonLd(post: {
     image: post.coverImage || `${BASE_URL}/avatar.png`,
     datePublished: post.createdAt,
     dateModified: post.updatedAt,
+    wordCount: wordCount,
+    timeRequired: `PT${post.readingTime || 5}M`,
+    keywords: post.tags?.join(", "),
     author: {
       "@type": "Person",
       name: post.author.name,
@@ -105,6 +114,34 @@ function generateArticleJsonLd(post: {
       "@type": "WebPage",
       "@id": `${BASE_URL}/blog/${post.slug}`,
     },
+  };
+}
+
+// JSON-LD BreadcrumbList for navigation hierarchy
+function generateBreadcrumbJsonLd(post: { title: string; slug: string }) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: BASE_URL,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Blog",
+        item: `${BASE_URL}/blog`,
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: post.title,
+        item: `${BASE_URL}/blog/${post.slug}`,
+      },
+    ],
   };
 }
 
@@ -129,6 +166,7 @@ export default async function BlogPostPage({
   });
 
   const jsonLd = generateArticleJsonLd(post);
+  const breadcrumbJsonLd = generateBreadcrumbJsonLd(post);
 
   return (
     <>
@@ -136,6 +174,10 @@ export default async function BlogPostPage({
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
 
       <main className="min-h-screen bg-white">
