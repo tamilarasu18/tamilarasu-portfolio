@@ -57,10 +57,11 @@ export default function Navbar() {
               </a>
             ))}
             <a
-              href="#contact"
+              href="/resume/Tamilarasu_Resume.pdf"
+              download
               className="px-5 py-2.5 bg-[#2563EB] text-white rounded-xl font-semibold hover:bg-[#1D4ED8] transition-all duration-200 cursor-pointer shadow-md hover:shadow-lg"
             >
-              Hire Me
+              Download Resume
             </a>
           </div>
 
@@ -117,11 +118,12 @@ export default function Navbar() {
                   </a>
                 ))}
                 <a
-                  href="#contact"
+                  href="/resume/Tamilarasu_Resume.pdf"
+                  download
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="px-5 py-2.5 bg-[#2563EB] text-white rounded-xl font-semibold hover:bg-[#1D4ED8] transition-all duration-200 cursor-pointer w-full text-center"
                 >
-                  Hire Me
+                  Download Resume
                 </a>
               </div>
             </motion.div>
