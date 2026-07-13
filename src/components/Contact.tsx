@@ -141,7 +141,7 @@ export default function Contact() {
             </svg>
           </a>
           <a
-            href="https://www.linkedin.com/in/tamilarasu-m-7517231a1/"
+            href="https://www.linkedin.com/in/tamilarasum/"
             target="_blank"
             rel="noopener noreferrer"
             className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-[#3F3F46] hover:text-white hover:bg-[#0077b5] border border-[#E4E4E7] hover:border-[#0077b5] transition-all duration-300 cursor-pointer shadow-sm hover:shadow-lg"
